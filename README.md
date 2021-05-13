@@ -1,4 +1,6 @@
 # next-test
+
+official Next.js tutorial.
 # setup
 
 https://nextjs.org/learn/basics/create-nextjs-app/setup
@@ -17,9 +19,9 @@ Unlike static site generators and static-only solutions, your build times aren't
 Images are always rendered in such a way as to avoid Cumulative Layout Shift, a Core Web Vital that Google is going to use in search ranking.
 
 ## CSS Styling
+### CSS in JS
 
-### styled-jsx
-
+styled-jsx
 ```:js
 <style jsx>{`
   …
@@ -44,3 +46,66 @@ npm install --save-dev @types/react
 
 tsconfig.json will be overwritten.
 A file name next-env.d.ts will be created. This file ensures Next.js types are picked up by the TypeScript compiler. You cannot remove it, however, you can edit it (but you don't need to).
+
+## Pre-rendering and Data Fetching
+
+By default, Next.js pre-renders every page. This means that Next.js generates HTML for each page in advance, instead of having it all done by client-side JavaScript. Pre-rendering can result in better performance and SEO.
+Each generated HTML is associated with minimal JavaScript code necessary for that page. When a page is loaded by the browser, its JavaScript code runs and makes the page fully interactive. (This process is called **hydration.**)  
+
+Next.js has two forms of pre-rendering: Static Generation and Server-side Rendering.
+
+### Static Generation with data
+
+`getStaticProps` runs at build time in production.
+Inside the function, you can fetch external data and send it as props to the page.
+Essentially, getStaticProps allows you to tell Next.js: “Hey, this page has some data dependencies — so when you pre-render this page at build time, make sure to resolve them first!”
+
+```:js
+export default function Home(props) { ... }
+
+export async function getStaticProps() {
+  // Get external data from the file system, API, DB, etc.
+  const data = ...
+
+  // The value of the `props` key will be
+  //  passed to the `Home` component
+  return {
+    props: ...
+  }
+}
+```
+
+> Note: In development mode, getStaticProps runs on each request instead.
+
+### Server-side Rendering  with data
+
+To use Server-side Rendering, you need to export `getServerSideProps` instead of `getStaticProps` from your page.
+
+```:js
+export async function getServerSideProps(context) {
+  return {
+    props: {
+      // props for your component
+    }
+  }
+}
+```
+
+Time to first byte (TTFB) will be slower than getStaticProps because the server must compute the result on every request, and the result cannot be cached by a CDN without extra configuration.
+
+### Client-side Rendering
+
+The team behind Next.js has created a React hook for data fetching called SWR. We highly recommend it if you’re fetching data on the client side. 
+It handles caching, revalidation, focus tracking, refetching on interval, and more. 
+
+```:js
+import useSWR from 'swr'
+
+function Profile() {
+  const { data, error } = useSWR('/api/user', fetch)
+
+  if (error) return <div>failed to load</div>
+  if (!data) return <div>loading...</div>
+  return <div>hello {data.name}!</div>
+}
+```
